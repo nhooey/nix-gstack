@@ -1,0 +1,20 @@
+# Garnix CI configuration. https://garnix.io/docs/ci/yaml_config/
+#
+# Covers all four arches the flake exposes via `nix-systems/default`. Drop a
+# Darwin row only if/when the flake stops exposing that system; until then,
+# leaving it in keeps M-series and Intel Mac contributors covered.
+builds:
+  include:
+    - "checks.x86_64-linux.*"
+    - "checks.aarch64-linux.*"
+    - "checks.x86_64-darwin.*"
+    - "checks.aarch64-darwin.*"
+    - "devShells.x86_64-linux.default"
+    - "devShells.aarch64-linux.default"
+    - "devShells.x86_64-darwin.default"
+    - "devShells.aarch64-darwin.default"
+    - "packages.x86_64-linux.gstack"
+    - "packages.aarch64-linux.gstack"
+    - "packages.x86_64-darwin.gstack"
+    - "packages.aarch64-darwin.gstack"
+  exclude: []
