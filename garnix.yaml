@@ -1,11 +1,10 @@
 # Garnix CI configuration. https://garnix.io/docs/ci/yaml_config/
 #
-# Scoped to x86_64-linux while the hermetic FOD's per-system node_modules
-# hashes are still being populated — see nix/gstack.nix `nodeModulesHash`.
-# Re-add the other systems' rows as their hashes get pinned.
+# Single coarse wildcard covers every flake output for x86_64-linux:
+# `checks.x86_64-linux.*`, `devShells.x86_64-linux.*`,
+# `packages.x86_64-linux.*`. Add `*.aarch64-linux.*` / `*.x86_64-darwin.*`
+# / `*.aarch64-darwin.*` rows when ready to expand the matrix.
 builds:
   include:
-    - "checks.x86_64-linux.*"
-    - "devShells.x86_64-linux.default"
-    - "packages.x86_64-linux.gstack"
+    - "*.x86_64-linux.*"
   exclude: []
