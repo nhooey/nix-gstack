@@ -1,0 +1,135 @@
+# Known-compromised npm / PyPI package names.
+#
+# Lines starting with `#` and blank lines are ignored. One package name per
+# line, no version. Used by the FOD pre-install scan and a flake check —
+# both `grep -wFf` this file against bun.lock and fail on any match.
+#
+# When adding entries, prefer the bare package name (no version). Wildcard
+# patterns are NOT supported — list each compromised package name explicitly
+# even if it shares a scope. Lockfiles reference packages by exact name.
+#
+# Sources:
+#   - Mini Shai-Hulud (TanStack / Mistral / UiPath / 169 npm + 2 PyPI),
+#     disclosed 2026-05-12. Reference:
+#     https://www.wiz.io/blog/mini-shai-hulud-strikes-again-tanstack-more-npm-packages-compromised
+#
+# Maintenance: when a new supply-chain incident is disclosed, append the
+# package names here and bump the FOD hash (the scan now treats them as
+# poison, so `nix build` either succeeds clean or fails loudly).
+
+# ── Mini Shai-Hulud (2026-05-12) ──────────────────────────────────────
+# PyPI (also caught by the same grep against bun.lock — harmless extras)
+guardrails-ai
+mistralai
+
+# npm
+@beproduct/nestjs-auth
+@cap-js/db-service
+@cap-js/postgres
+@cap-js/sqlite
+@dirigible-ai/sdk
+@draftauth/client
+@draftauth/core
+@draftlab/auth
+@draftlab/auth-router
+@draftlab/db
+@mesadev/rest
+@mesadev/saguaro
+@mesadev/sdk
+@mistralai/mistralai
+@mistralai/mistralai-azure
+@mistralai/mistralai-gcp
+@ml-toolkit-ts/preprocessing
+@ml-toolkit-ts/xgboost
+@opensearch-project/opensearch
+@squawk/airport-data
+@squawk/airports
+@squawk/airspace
+@squawk/airspace-data
+@squawk/airway-data
+@squawk/airways
+@squawk/fix-data
+@squawk/fixes
+@squawk/flight-math
+@squawk/flightplan
+@squawk/geo
+@squawk/icao-registry
+@squawk/icao-registry-data
+@squawk/mcp
+@squawk/navaid-data
+@squawk/navaids
+@squawk/notams
+@squawk/procedure-data
+@squawk/procedures
+@squawk/types
+@squawk/units
+@squawk/weather
+@supersurkhet/cli
+@supersurkhet/sdk
+@tallyui/components
+@tallyui/connector-medusa
+@tallyui/connector-shopify
+@tallyui/connector-vendure
+@tallyui/connector-woocommerce
+@tallyui/core
+@tallyui/database
+@tallyui/pos
+@tallyui/storage-sqlite
+@tallyui/theme
+@tanstack/arktype-adapter
+@tanstack/eslint-plugin-router
+@tanstack/eslint-plugin-start
+@tanstack/history
+@tanstack/nitro-v2-vite-plugin
+@tanstack/react-router
+@tanstack/react-router-devtools
+@tanstack/react-router-ssr-query
+@tanstack/react-start
+@tanstack/react-start-client
+@tanstack/react-start-rsc
+@tanstack/react-start-server
+@tanstack/router-cli
+@tanstack/router-core
+@tanstack/router-devtools
+@tanstack/router-devtools-core
+@tanstack/router-generator
+@tanstack/router-plugin
+@tanstack/router-ssr-query-core
+@tanstack/router-utils
+@tanstack/router-vite-plugin
+@tanstack/solid-router
+@tanstack/solid-router-devtools
+@tanstack/solid-router-ssr-query
+@tanstack/solid-start
+@tanstack/solid-start-client
+@tanstack/solid-start-server
+@tanstack/start-client-core
+@tanstack/start-fn-stubs
+@tanstack/start-plugin-core
+@tanstack/start-server-core
+@tanstack/start-static-server-functions
+@tanstack/start-storage-context
+@tanstack/valibot-adapter
+@tanstack/virtual-file-routes
+@tanstack/vue-router
+@tanstack/vue-router-devtools
+@tanstack/vue-router-ssr-query
+@tanstack/vue-start
+@tanstack/vue-start-client
+@tanstack/vue-start-server
+@tanstack/zod-adapter
+@taskflow-corp/cli
+@tolka/cli
+agentwork-cli
+cmux-agent-mcp
+cross-stitch
+git-branch-selector
+git-git-git
+intercom-client
+lightning
+mbt
+ml-toolkit-ts
+nextmove-mcp
+safe-action
+ts-dna
+wot-api

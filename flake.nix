@@ -60,6 +60,14 @@
             default = gstack;
           };
 
+          checks = {
+            # Refuses the build if bun.lock references any package name
+            # listed in nix/compromised-packages.txt (Mini Shai-Hulud, etc.).
+            # Runs on `nix flake check` so supply-chain regressions surface
+            # without a full FOD rebuild.
+            supply-chain = gstack.passthru.supplyChainCheck;
+          };
+
           treefmt = {
             projectRootFile = "flake.nix";
             # Only nixfmt for now. Adding shfmt / prettier / etc. would force
