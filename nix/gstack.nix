@@ -15,10 +15,10 @@ let
   inherit (pkgs) lib;
 
   src = pkgs.fetchFromGitHub {
-    owner = "nhooey";
+    owner = "garrytan";
     repo = "gstack";
-    rev = "6209163900beb7497391f8dfc35e2c7d362f23b8";
-    hash = "sha256-cLW7NRXmuGGYIO3i/N2xM8Nay3Vm9+TC8iSMmAn9CM8=";
+    rev = "dc6252d1df7f1f650ea6e9b2bba7d08fab5de902";
+    hash = "sha256-4Qns7n4f+TYjwsTscwHaGxpAFz++5Xo1D/XJILt46VQ=";
   };
 in
 pkgs.writeShellApplication {
@@ -58,7 +58,7 @@ pkgs.writeShellApplication {
       browser download), so this is a runtime-resolved package rather than a
       hermetic build.
     '';
-    homepage = "https://github.com/nhooey/gstack";
+    homepage = "https://github.com/garrytan/gstack";
     license = lib.licenses.mit;
     mainProgram = "gstack-setup";
     platforms = lib.platforms.unix;
