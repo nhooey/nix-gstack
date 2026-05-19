@@ -32,6 +32,9 @@
 let
   inherit (pkgs) lib;
 
+  # Single source of truth for the Node toolchain — bump here only.
+  nodejs = pkgs.nodejs_22;
+
   src = pkgs.fetchFromGitHub {
     owner = "garrytan";
     repo = "gstack";
@@ -143,7 +146,7 @@ let
 
     nativeBuildInputs = [
       pkgs.bun
-      pkgs.nodejs_22
+      nodejs
       pkgs.perl # browse/scripts/build-node-server.sh shells out to perl
     ]
     ++ lib.optional pkgs.stdenv.isDarwin pkgs.darwin.sigtool;
@@ -242,7 +245,7 @@ pkgs.writeShellApplication {
 
   runtimeInputs = [
     pkgs.bun
-    pkgs.nodejs_22
+    nodejs
     pkgs.git
     pkgs.coreutils
     pkgs.bash
