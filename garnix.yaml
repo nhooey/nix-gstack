@@ -1,10 +1,13 @@
 # Garnix CI configuration. https://garnix.io/docs/ci/yaml_config/
 #
-# Single coarse wildcard covers every flake output for x86_64-linux:
-# `checks.x86_64-linux.*`, `devShells.x86_64-linux.*`,
-# `packages.x86_64-linux.*`. Add `*.aarch64-linux.*` / `*.x86_64-darwin.*`
-# / `*.aarch64-darwin.*` rows when ready to expand the matrix.
+# One wildcard per (output-class, arch) pair the flake actually exposes.
+# Covers newly-added attrs without editing this file, while still bounding
+# what each push builds to the x86_64-linux axis we opted into. Add
+# `*.aarch64-linux` / `*.x86_64-darwin` / `*.aarch64-darwin` rows when
+# ready to expand the matrix.
 builds:
   include:
-    - "*.x86_64-linux.*"
+    - "packages.x86_64-linux.*"
+    - "checks.x86_64-linux.*"
+    - "devShells.x86_64-linux.default"
   exclude: []

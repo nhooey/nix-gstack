@@ -1,4 +1,4 @@
 # Nix build symlinks (created by `nix build`)
 /result
 /result-*
-.gstack/
+/.gstack/
