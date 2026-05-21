@@ -149,7 +149,10 @@ let
       nodejs
       pkgs.perl # browse/scripts/build-node-server.sh shells out to perl
     ]
-    ++ lib.optional pkgs.stdenv.isDarwin pkgs.darwin.sigtool;
+    ++ lib.optionals pkgs.stdenv.isDarwin [
+      pkgs.darwin.sigtool # stdenv-darwin's auto-codesign fixup hook
+      pkgs.rcodesign # tolerates the malformed Mach-O that bun --compile emits
+    ];
 
     PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
@@ -204,10 +207,12 @@ let
     '';
 
     postBuild = lib.optionalString pkgs.stdenv.isDarwin ''
-      # bun --compile produces a malformed code signature on Apple Silicon;
-      # the remove-then-resign two-step is required because a naive `codesign
-      # -s - -f` fails when the existing signature block is corrupt. Doing it
-      # at build time means every activation isn't re-signing.
+      # bun --compile emits Mach-O where __LINKEDIT doesn't cover end-of-file
+      # (bun appends embedded JS past LINKEDIT), so Apple's `codesign_allocate`
+      # aborts and `codesign --remove-signature` + resign can't recover.
+      # `rcodesign` (sigstore) rewrites the load commands tolerantly and
+      # produces a valid adhoc signature. Pre-signing at build time avoids
+      # re-signing on every activation.
       for bin in \
         browse/dist/browse \
         browse/dist/find-browse \
@@ -215,8 +220,7 @@ let
         make-pdf/dist/pdf \
         bin/gstack-global-discover; do
         [ -x "$bin" ] || continue
-        codesign --remove-signature "$bin" 2>/dev/null || true
-        codesign -s - -f "$bin"
+        rcodesign sign "$bin"
       done
     '';
 
