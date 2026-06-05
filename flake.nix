@@ -23,6 +23,17 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # `agent-skill-flake` is the builder library, not a skill — it provides the
+    # `devshellSkillsHook` that wires the dev-shell skill set in below. The skill
+    # sources themselves are NOT inputs here: they live only in the
+    # `skills-devshell/` sub-flake's lock, which this dev shell invokes at
+    # RUNTIME (never as a root input), keeping this flake a leaf with zero skill
+    # inputs.
+    agent-skill-flake = {
+      url = "github:nhooey/agent-skill-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -33,8 +44,17 @@
       systems,
       devshell,
       treefmt-nix,
+      agent-skill-flake,
       ...
     }@inputs:
+    let
+      # Root-side wiring for the `skills-devshell/` sub-flake: the dev-shell
+      # skill set (all skills-git skills plus nix-flakes/nix-garnix-ci from
+      # skills-nix) is defined in the isolated `skills-devshell/` sub-flake and
+      # invoked here at RUNTIME (not a root input), so this flake keeps zero
+      # skill inputs and never drags the skill mesh into its lock.
+      devshellSkills = agent-skill-flake.lib.devshellSkillsHook { };
+    in
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = import systems;
 
@@ -92,6 +112,16 @@
               pkgs.nix
               pkgs.ripgrep
             ];
+
+            # Auto-reconcile the dev-shell skill set at project scope on
+            # `nix develop`: every skills-git skill plus nix-flakes/
+            # nix-garnix-ci from skills-nix, merged into one combination that a
+            # single reconcile owner converges — declarative + idempotent. The
+            # skills-devshell sub-flake's reconcile app is invoked at RUNTIME by
+            # this hook (`nix run "$PRJ_ROOT/skills-devshell#reconcile"`), so the
+            # skill sources never become root inputs.
+            devshell.startup.install-skills.text = devshellSkills.startup;
+
             commands = [
               # ci
               {
@@ -120,7 +150,8 @@
                 help = "Refresh every flake input to its latest revision";
                 command = "nix flake update";
               }
-            ];
+            ]
+            ++ devshellSkills.commands;
           };
         };
     };
