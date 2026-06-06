@@ -42,8 +42,6 @@
       inherit nixpkgs;
       systems = import inputs.systems;
       name = "nix-gstack-skills";
-      envName = "agent-skills-nix-gstack-skills";
-      packagePrefix = "agent-skill-";
       sources = [
         { source = skills-git; }
         {

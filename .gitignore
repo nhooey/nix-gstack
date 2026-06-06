@@ -2,3 +2,6 @@
 /result
 /result-*
 /.gstack/
+
+# Skills installed at project scope by the dev-shell skills convention
+/.claude/skills/
