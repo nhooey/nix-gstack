@@ -1,5 +1,5 @@
 {
-  description = "nix-gstack dev-shell skill set — an isolated sub-flake invoked at RUNTIME by the root devShell, never a root input. The skill sources (all skills-git skills plus nix-flakes/nix-garnix-ci from skills-nix) live only in THIS flake's lock, so the root nix-gstack stays a leaf with zero skill inputs and transitive consumers never drag the skill mesh in.";
+  description = "nix-gstack dev-shell skill set — an isolated sub-flake invoked at RUNTIME by the root devShell, never a root input. The skill sources (all skills-git skills plus the nix-flakes skill from skills-nix) live only in THIS flake's lock, so the root nix-gstack stays a leaf with zero skill inputs and transitive consumers never drag the skill mesh in.";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -48,7 +48,6 @@
           source = skills-nix;
           skills = [
             "nix-flakes"
-            "nix-garnix-ci"
           ];
         }
       ];
