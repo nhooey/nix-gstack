@@ -70,12 +70,46 @@
       };
 
       perSystem =
-        { pkgs, ... }:
+        { pkgs, system, ... }:
         let
+          inherit (pkgs) lib;
           gstack = pkgs.callPackage ./nix/gstack.nix { };
+          inherit (gstack.passthru) skills src;
+
+          # Every upstream skill: a top-level folder with a SKILL.md template,
+          # except these. The root `gstack` skill routes to all the others,
+          # and a consumer installs only the ones it picks; `claude-code` and
+          # `connect-chrome` have templates that render nothing for Claude Code.
+          notRendered = [
+            "claude-code"
+            "connect-chrome"
+            "gstack"
+          ];
+          skillNames = lib.filter (
+            name: !lib.elem name notRendered && builtins.pathExists "${src}/${name}/SKILL.md.tmpl"
+          ) (lib.attrNames (lib.filterAttrs (_: type: type == "directory") (builtins.readDir src)));
+
+          # One `agent-skill-garrytan-<name>` package per skill, from its
+          # rendered folder, so an agent-skill-flake consumer can list nix-gstack
+          # as a source and pick skills by name, with a `prefix` if it wants one.
+          skillPackages = lib.foldl' (
+            acc: name:
+            acc
+            //
+              lib.filterAttrs (key: _: lib.hasPrefix "agent-skill-" key)
+                (inputs.agent-skill-flake.lib.mkSkillFlake {
+                  inherit nixpkgs;
+                  skillName = name;
+                  source.owner = "garrytan";
+                  src = "${skills}/${name}";
+                  systems = [ system ];
+                  description = "gstack skill: ${name}";
+                  inherit (gstack.passthru.gstack) version;
+                }).packages.${system}
+          ) { } skillNames;
         in
         {
-          packages = {
+          packages = skillPackages // {
             inherit gstack;
             default = gstack;
           };

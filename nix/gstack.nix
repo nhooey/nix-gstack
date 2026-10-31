@@ -14,7 +14,17 @@
 #      to compile browse/design/make-pdf binaries, codesigns on darwin, and
 #      installs the tree to $out/share/gstack.
 #
-#   3. `gstack-setup` (the file's output) — activation wrapper. Copies
+#   3. `skills` — gstack's tree with its skills rendered for a read-only
+#      install: a symlink copy of `gstack`'s tree (node_modules a single
+#      link), with upstream's renderer, `scripts/gen-skill-docs.ts`, run
+#      with `--install-root` and `--link-root` set to the copy itself. Every
+#      path a skill would take from ~/.claude/skills/gstack then points at
+#      the copy in the store, including the SKILL.md files that /autoplan
+#      reads for the other reviews, so no `gstack` folder is needed among
+#      the installed skills. flake.nix makes one agent-skill-flake package
+#      of each skill.
+#
+#   4. `gstack-setup` (the file's output) — activation wrapper. Copies
 #      $out/share/gstack into $GSTACK_HOME on first run, exports
 #      GSTACK_PREBUILT=1 + PLAYWRIGHT_BROWSERS_PATH, then execs upstream
 #      `setup` to do skill registration (~/.claude/skills/*, etc.) without
@@ -235,6 +245,25 @@ let
     };
   };
 
+  skills = pkgs.runCommand "gstack-skills-${gstack.version}" { nativeBuildInputs = [ pkgs.bun ]; } ''
+    export HOME=$TMPDIR
+    tree=${gstack}/share/gstack
+    mkdir -p $out
+    for entry in "$tree"/* "$tree"/.[!.]*; do
+      [ -e "$entry" ] || continue
+      case "$(basename "$entry")" in
+        node_modules) ln -s "$entry" $out/node_modules ;;
+        *) cp -rs "$entry" $out/ ;;
+      esac
+    done
+    chmod -R u+w $out
+    cd "$tree"
+    bun run scripts/gen-skill-docs.ts --host claude --out-dir $TMPDIR/render \
+      --install-root $out --link-root $out
+    # The rendered files replace the links to their unrendered originals.
+    cp -R --remove-destination $TMPDIR/render/. $out/
+  '';
+
 in
 pkgs.writeShellApplication {
   name = "gstack-setup";
@@ -280,6 +309,7 @@ pkgs.writeShellApplication {
     inherit
       gstack
       nodeModules
+      skills
       src
       supplyChainCheck
       ;
