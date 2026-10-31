@@ -8,9 +8,9 @@
 #      pkgs.playwright-driver.browsers at runtime. Output is platform-specific;
 #      `nodeModulesHash` is a per-system table.
 #
-#   2. `gstack` — patches upstream `package.json` to drop `git rev-parse HEAD`
-#      (no .git in sandbox), patches `setup` to gate non-hermetic steps behind
-#      GSTACK_PREBUILT=1, copies vendored node_modules in, runs `bun run build`
+#   2. `gstack` — patches upstream `scripts/write-version-files.sh` to stamp
+#      the pinned rev (no .git in sandbox), patches `setup` to fail instead of
+#      rebuilding or downloading Chromium under GSTACK_PREBUILT=1, copies vendored node_modules in, runs `bun run build`
 #      to compile browse/design/make-pdf binaries, codesigns on darwin, and
 #      installs the tree to $out/share/gstack.
 #
@@ -38,13 +38,13 @@ let
   src = pkgs.fetchFromGitHub {
     owner = "garrytan";
     repo = "gstack";
-    rev = "dc6252d1df7f1f650ea6e9b2bba7d08fab5de902";
-    hash = "sha256-4Qns7n4f+TYjwsTscwHaGxpAFz++5Xo1D/XJILt46VQ=";
+    rev = "088bfc5914f8001a3d49b3a0c35d6f7cb800268c";
+    hash = "sha256-hvq185yLAmtwqO6rezP35F7kAGrsHlq+nouPFzwwvQg=";
   };
 
   nodeModulesHash =
     {
-      "aarch64-darwin" = "sha256-oQWGwLY5eJTuWqeCj4jel4gYkhoomPgRW/FK0GVC+Nw=";
+      "aarch64-darwin" = "sha256-54E9FwheEz3giVVabKk1J07/6Gh5qg5v/4ew0g5+QGg=";
       "x86_64-darwin" = "sha256-L9xus4HYkMxeQwJWLJbyPBMT1Z2CeGnckyD+NENiZxY=";
       "aarch64-linux" = "sha256-Fzmf0td3cMejHy+H7hfI15Ikt0LhVPOQ0gPNkxOG/Io=";
       "x86_64-linux" = "sha256-o36m2aYuieuGJi1mxAZiCR9ENsMNow+quO1NqRCMiB4=";
@@ -160,38 +160,33 @@ let
     dontConfigure = true;
 
     postPatch = ''
-      # `git rev-parse HEAD` is unavailable in the sandbox. Upstream wraps it
-      # in `2>/dev/null || true` so the build won't fail on missing git, but
-      # the resulting .version files would be empty. Replace with our pinned
-      # rev so binaries embed the SHA. The loop fails loudly if any binary's
-      # .version stamp goes missing — defending against upstream restructuring.
-      for dist in browse design make-pdf; do
-        substituteInPlace package.json \
-          --replace-fail \
-            "{ git rev-parse HEAD 2>/dev/null || true; } > $dist/dist/.version" \
-            "printf %s ${src.rev} > $dist/dist/.version"
-      done
+      # `git rev-parse HEAD` is unavailable in the sandbox, so upstream's
+      # version stamp would come out empty. Stamp our pinned rev instead, so
+      # browse / design / make-pdf embed the SHA. --replace-fail fails the
+      # build if upstream restructures the stamp script.
+      substituteInPlace scripts/write-version-files.sh \
+        --replace-fail \
+          'if git_head="$(git rev-parse HEAD 2>/dev/null)"; then' \
+          'if git_head="${src.rev}"; then'
 
-      # Gate the three non-hermetic regen blocks in `setup` behind
-      # GSTACK_PREBUILT=1. All three share the suffix `&& [ "$NEEDS_BUILD"
-      # -eq 0 ]; then` and only those three lines do (verified at refactor
-      # time), so one substitution updates all three. The build phase
-      # pre-generates .agents/.factory/.opencode/ via
-      # `bun run gen:skill-docs --host all`; re-running per-host at
-      # activation is both redundant and would call `bun install` (network).
+      # Activation must never rebuild: the build runs `bun install` (network)
+      # and recompiles what this derivation already built. The wrapper below
+      # re-stamps browse/dist/.build-complete after staging, so setup's
+      # mtime checks see a current build; if they still decide to rebuild,
+      # fail loudly instead of reaching the network.
       substituteInPlace setup \
         --replace-fail \
-          '&& [ "$NEEDS_BUILD" -eq 0 ]; then' \
-          '&& [ "$NEEDS_BUILD" -eq 0 ] && [ "''${GSTACK_PREBUILT:-0}" != "1" ]; then'
+          'log "Building browse binary..."' \
+          'if [ "''${GSTACK_PREBUILT:-0}" = "1" ]; then echo "ERROR: hermetic gstack expected a prebuilt tree, but setup decided to rebuild it" >&2; exit 1; fi; log "Building browse binary..."'
 
-      # The `bunx playwright install` fallback must not run in hermetic mode —
-      # PLAYWRIGHT_BROWSERS_PATH supplies Chromium. Fail loudly if the
-      # ensure_playwright_browser check ever drops into this branch (would
-      # indicate playwright npm version drift vs pkgs.playwright-driver).
+      # The `bun x playwright install` fallback must not run in hermetic mode:
+      # PLAYWRIGHT_BROWSERS_PATH supplies Chromium. Fail loudly if setup's
+      # browser check ever drops into this branch (would indicate playwright
+      # npm version drift vs pkgs.playwright-driver).
       substituteInPlace setup \
         --replace-fail \
           'echo "Installing Playwright Chromium..."' \
-          'echo "ERROR: hermetic build expected Chromium via PLAYWRIGHT_BROWSERS_PATH but ensure_playwright_browser failed (playwright/playwright-driver version mismatch?)" >&2; exit 1; echo "Installing Playwright Chromium..."'
+          'echo "ERROR: hermetic build expected Chromium via PLAYWRIGHT_BROWSERS_PATH but the browser check failed (playwright/playwright-driver version mismatch?)" >&2; exit 1; echo "Installing Playwright Chromium..."'
     '';
 
     preBuild = ''
@@ -263,9 +258,20 @@ pkgs.writeShellApplication {
       mkdir -p "$(dirname "$GSTACK_HOME")"
       cp -R "${gstack}/share/gstack/." "$GSTACK_HOME/"
       chmod -R u+w "$GSTACK_HOME"
+      # The copy gives every file a fresh mtime; re-stamp the build after it
+      # so setup's "sources newer than the build" check doesn't fire.
+      touch "$GSTACK_HOME/browse/dist/.build-complete"
     fi
 
     export GSTACK_PREBUILT=1
+    # CSO's native core doesn't build in the sandbox (scripts/build-cso.sh
+    # records the failure and the rest of the build continues). Tell setup it
+    # is unavailable, or the missing launcher would make setup try to rebuild;
+    # /cso then stays visibly fail-closed, as upstream intends.
+    export GSTACK_SETUP_SKIP_CSO_BUILD=1
+    # setup installs coreutils through Homebrew on macOS: a machine-wide
+    # change that activation must not make.
+    export GSTACK_SKIP_COREUTILS=1
     export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
     export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
