@@ -12,7 +12,10 @@
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    systems.url = "github:nix-systems/default";
+    # aarch64-darwin only: the node_modules hash for gstack 088bfc5 has been
+    # computed only there. Override this input with github:nix-systems/default
+    # (or another nix-systems list) once nix/gstack.nix has the other hashes.
+    systems.url = "github:nix-systems/aarch64-darwin";
 
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";

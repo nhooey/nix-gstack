@@ -44,7 +44,7 @@ update-flake
   inputs.nix-gstack.url = "github:nhooey/nix-gstack";
 
   outputs = { self, nixpkgs, nix-gstack, ... }:
-    let system = "x86_64-linux"; in {
+    let system = "aarch64-darwin"; in {
       packages.${system}.gstack = nix-gstack.packages.${system}.gstack;
     };
 }
