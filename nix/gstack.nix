@@ -161,6 +161,11 @@ let
       pkgs.rcodesign # tolerates the malformed Mach-O that bun --compile emits
     ];
 
+    # The installed scripts run under bun. fixupPhase's patchShebangs resolves
+    # their `#!/usr/bin/env -S bun …` lines against buildInputs only; with bun
+    # in nativeBuildInputs alone, the interpreter came out empty.
+    buildInputs = [ pkgs.bun ];
+
     PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
 
@@ -235,6 +240,17 @@ let
       ln -s $out/share/gstack/design/dist/design $out/bin/design
       ln -s $out/share/gstack/make-pdf/dist/pdf $out/bin/make-pdf
       runHook postInstall
+    '';
+
+    # Many bash scripts call `bun` by name, among them the skills' hooks,
+    # which Claude Code runs outside any devshell. Put bun on each bash
+    # script's own PATH, right after its (already patched) shebang.
+    postFixup = ''
+      while IFS= read -r -d "" f; do
+        head -n1 "$f" | grep -q '^#!/nix/store/[^/ ]*-bash-[^/ ]*/bin/bash' || continue
+        sed -i '1a export PATH=${pkgs.bun}/bin''${PATH:+:$PATH}' "$f"
+      done < <(find $out/share/gstack -path $out/share/gstack/node_modules -prune \
+        -o -type f -perm -u+x -print0)
     '';
 
     meta = {
