@@ -70,10 +70,23 @@
         { pkgs, ... }:
         let
           gstack = pkgs.callPackage ./nix/gstack.nix { };
+
+          # Removes what `gstack-setup` installed outside the Nix store, after
+          # listing it and asking at the terminal.
+          remove-gstack-setup-install = pkgs.writeShellApplication {
+            name = "remove-gstack-setup-install";
+            runtimeInputs = [
+              pkgs.coreutils
+              pkgs.findutils
+              pkgs.gnused
+              pkgs.jq
+            ];
+            text = builtins.readFile ./scripts/remove-gstack-setup-install.sh;
+          };
         in
         {
           packages = {
-            inherit gstack;
+            inherit gstack remove-gstack-setup-install;
             default = gstack;
           };
 
@@ -112,11 +125,20 @@
             ];
 
             commands = [
+              # ci
               {
                 category = "ci";
                 name = "fmt-check";
                 help = "Verify formatting without writing changes";
                 command = "nix fmt -- --ci";
+              }
+
+              # maintenance
+              {
+                category = "maintenance";
+                name = "remove-gstack-setup-install";
+                help = "List what gstack-setup installed outside the Nix store, and delete it after asking";
+                package = remove-gstack-setup-install;
               }
             ];
           };
