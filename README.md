@@ -50,6 +50,22 @@ update-flake
 }
 ```
 
+### Installing chosen skills with agent-skill-flake
+
+Each skill is also a package, `agent-skill-garrytan-<name>`, rendered so that
+the paths it would take from `~/.claude/skills/gstack` point into the Nix store
+instead. No `gstack` folder is installed, and nothing is written outside Nix
+except gstack's own runtime state in `~/.gstack`. List nix-gstack as a source
+of agent-skill-flake's `mkDevshellSkillsFlake` and pick skills by name:
+
+```nix
+{
+  source = nix-gstack;
+  skills = [ "plan-eng-review" "investigate" ];
+  prefix = "gstack"; # installs /gstack-plan-eng-review and /gstack-investigate
+}
+```
+
 Or run it directly:
 
 ```sh

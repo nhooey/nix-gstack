@@ -14,7 +14,14 @@
 #      to compile browse/design/make-pdf binaries, codesigns on darwin, and
 #      installs the tree to $out/share/gstack.
 #
-#   3. `gstack-setup` (the file's output) — activation wrapper. Copies
+#   3. `skills` — the skills rendered for a read-only install. Upstream's
+#      renderer, `scripts/gen-skill-docs.ts`, is run with `--install-root`
+#      set to `gstack`'s tree in the store, so every path a skill would take
+#      from ~/.claude/skills/gstack points into the store instead, and no
+#      `gstack` folder is needed among the installed skills. flake.nix makes
+#      one agent-skill-flake package of each skill.
+#
+#   4. `gstack-setup` (the file's output) — activation wrapper. Copies
 #      $out/share/gstack into $GSTACK_HOME on first run, exports
 #      GSTACK_PREBUILT=1 + PLAYWRIGHT_BROWSERS_PATH, then execs upstream
 #      `setup` to do skill registration (~/.claude/skills/*, etc.) without
@@ -235,6 +242,12 @@ let
     };
   };
 
+  skills = pkgs.runCommand "gstack-skills-${gstack.version}" { nativeBuildInputs = [ pkgs.bun ]; } ''
+    export HOME=$TMPDIR
+    cd ${gstack}/share/gstack
+    bun run scripts/gen-skill-docs.ts --host claude --out-dir $out --install-root ${gstack}/share/gstack
+  '';
+
 in
 pkgs.writeShellApplication {
   name = "gstack-setup";
@@ -280,6 +293,7 @@ pkgs.writeShellApplication {
     inherit
       gstack
       nodeModules
+      skills
       src
       supplyChainCheck
       ;
