@@ -54,7 +54,7 @@ let
 
   nodeModulesHash =
     {
-      "aarch64-darwin" = "sha256-54E9FwheEz3giVVabKk1J07/6Gh5qg5v/4ew0g5+QGg=";
+      "aarch64-darwin" = "sha256-ZMbFJNhbZ39my5hn9Sxow6CrjUIpuVauQacovZvlLZI=";
     }
     .${pkgs.stdenv.hostPlatform.system}
       or (throw "gstack: no nodeModulesHash entry for ${pkgs.stdenv.hostPlatform.system}");
