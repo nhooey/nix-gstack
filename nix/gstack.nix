@@ -156,7 +156,7 @@ let
       nodejs
       pkgs.perl # browse/scripts/build-node-server.sh shells out to perl
     ]
-    ++ lib.optionals pkgs.stdenv.isDarwin [
+    ++ lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
       pkgs.darwin.sigtool # stdenv-darwin's auto-codesign fixup hook
       pkgs.rcodesign # tolerates the malformed Mach-O that bun --compile emits
     ];
@@ -213,7 +213,7 @@ let
       runHook postBuild
     '';
 
-    postBuild = lib.optionalString pkgs.stdenv.isDarwin ''
+    postBuild = lib.optionalString pkgs.stdenv.hostPlatform.isDarwin ''
       # bun --compile emits Mach-O where __LINKEDIT doesn't cover end-of-file
       # (bun appends embedded JS past LINKEDIT), so Apple's `codesign_allocate`
       # aborts and `codesign --remove-signature` + resign can't recover.
