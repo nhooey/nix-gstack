@@ -3,5 +3,8 @@
 /result-*
 /.gstack/
 
-# Skills installed at project scope by the dev-shell skills convention
+# Project-scope skill installs from `nix develop`'s startup hooks; the
+# skills' preferences files beside them are the project's own.
+/.agents/skills/*
+!/.agents/skills/*.preferences.md
 /.claude/skills/
