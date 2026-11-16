@@ -30,11 +30,9 @@
 #      `setup` to do skill registration (~/.claude/skills/*, etc.) without
 #      touching the network.
 #
-# Re-pinning workflow when upstream rev or bun.lock changes:
-#   1. Bump `src.rev` + `src.hash`
-#   2. Empty the affected entry in `nodeModulesHash`
-#   3. `nix build` — error reports the correct hash
-#   4. Paste it back
+# Re-pinning to a new upstream rev, or re-pinning `nodeModulesHash` after
+# a bun or nixpkgs bump or for a new system: `nix-gstack pin` in the dev
+# shell (`nix-gstack pin --help` for its options).
 {
   pkgs,
 }:
@@ -326,9 +324,8 @@ pkgs.writeShellApplication {
       GSTACK_PREBUILT=1 — the build/install/codesign half is gated out, so
       activation is offline and only does skill registration.
 
-      Re-pinning node_modules: clear the entry in `nodeModulesHash` for the
-      affected system in nix/gstack.nix, run `nix build`, paste the suggested
-      hash back.
+      Re-pinning the source and node_modules: `nix-gstack pin` in the
+      nix-gstack dev shell.
     '';
     homepage = "https://github.com/garrytan/gstack";
     license = lib.licenses.mit;
