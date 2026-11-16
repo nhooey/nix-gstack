@@ -120,6 +120,14 @@
             # Runs on `nix flake check` so supply-chain regressions surface
             # without a full FOD rebuild.
             supply-chain = gstack.passthru.supplyChainCheck;
+
+            # The scan behind `supply-chain` rejects a listed name, and only
+            # whole names: fixture lockfiles in tests/supply-chain-scan.
+            supply-chain-scan = pkgs.runCommand "supply-chain-scan-test" { } ''
+              bash ${./tests/supply-chain-scan/test.sh} \
+                ${./nix/supply-chain-scan.sh} ${./tests/supply-chain-scan/fixtures}
+              touch $out
+            '';
           };
 
           treefmt = {
