@@ -107,6 +107,20 @@
                   inherit (gstack.passthru.gstack) version;
                 }).packages.${system}
           ) { } skillNames;
+
+          # The repository's maintenance tool, from nix/nix-gstack.sh.
+          nix-gstack = pkgs.writeShellApplication {
+            name = "nix-gstack";
+            runtimeInputs = [
+              pkgs.coreutils
+              pkgs.gawk
+              pkgs.git
+              pkgs.gnugrep
+              pkgs.gnused
+              pkgs.nix
+            ];
+            text = builtins.readFile ./nix/nix-gstack.sh;
+          };
         in
         {
           packages = skillPackages // {
@@ -129,6 +143,12 @@
               touch $out
             '';
 
+            # nix-gstack's argument parsing and its edits to nix/gstack.nix.
+            nix-gstack = pkgs.runCommand "nix-gstack-test" { } ''
+              bash ${./tests/nix-gstack/test.sh} ${./nix/nix-gstack.sh} ${./nix/gstack.nix}
+              touch $out
+            '';
+
             # Every packaged skill is rendered to point at the store, not at
             # ~/.claude/skills/gstack.
             skills-render = pkgs.runCommand "skills-render-test" { } ''
@@ -139,7 +159,13 @@
             # `nix flake check` only evaluates packages; this builds them all,
             # so a failed upstream patch (--replace-fail) or a broken skill
             # package fails the check.
-            packages = pkgs.linkFarmFromDrvs "nix-gstack-packages" (lib.attrValues skillPackages ++ [ gstack ]);
+            packages = pkgs.linkFarmFromDrvs "nix-gstack-packages" (
+              lib.attrValues skillPackages
+              ++ [
+                gstack
+                nix-gstack
+              ]
+            );
           };
 
           treefmt = {
@@ -174,6 +200,11 @@
                 name = "fmt-check";
                 help = "Verify formatting without writing changes";
                 command = "nix fmt -- --ci";
+              }
+              {
+                category = "maintenance";
+                package = nix-gstack;
+                help = "Re-pin gstack's source and node_modules hashes (nix-gstack pin)";
               }
             ];
           };
