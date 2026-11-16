@@ -136,7 +136,8 @@
             supply-chain = gstack.passthru.supplyChainCheck;
 
             # The scan behind `supply-chain` rejects a listed name, and only
-            # whole names: fixture lockfiles in tests/supply-chain-scan.
+            # whole names, and fails on inputs it cannot read: fixture
+            # lockfiles in tests/supply-chain-scan.
             supply-chain-scan = pkgs.runCommand "supply-chain-scan-test" { } ''
               bash ${./tests/supply-chain-scan/test.sh} \
                 ${./nix/supply-chain-scan.sh} ${./tests/supply-chain-scan/fixtures}

@@ -30,6 +30,13 @@ expect pass "accepts names that only contain a listed name" \
   "$fixtures/patterns.txt" "$fixtures/clean.lock"
 expect pass "a list of only comments and blank lines matches nothing" \
   "$fixtures/comments-only.txt" "$fixtures/compromised.lock"
+# A scan that cannot read its inputs has checked nothing, so it fails.
+expect fail "a missing list fails the scan" \
+  "$fixtures/missing.txt" "$fixtures/compromised.lock"
+expect fail "a missing lockfile fails the scan" \
+  "$fixtures/patterns.txt" "$fixtures/missing.lock"
+expect fail "a missing lockfile fails the scan even with an empty list" \
+  "$fixtures/comments-only.txt" "$fixtures/missing.lock"
 
 # The failure names the offending lockfile line, so whoever reads the
 # build log can see which package tripped it.
