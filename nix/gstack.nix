@@ -65,24 +65,15 @@ let
   # reusable version exposed to `nix flake check`.
   compromisedList = ./compromised-packages.txt;
 
-  # Reusable scan: greps bun.lock against the curated compromised-package
-  # list and fails the derivation if any line matches. Exposed both as a
-  # standalone `passthru.supplyChainCheck` (wired into `nix flake check`
-  # via flake.nix) and run inline at the top of the FOD's buildPhase so
-  # a compromised dep can't reach `bun install` in the first place.
-  #
-  # Reads the curated list with comments / blank lines stripped — a stray
-  # blank line in the patterns file would otherwise match every line in
-  # bun.lock (grep treats an empty pattern as match-all).
+  # Greps a bun.lock against the curated list and fails on any match. One
+  # script, run in two places: as the standalone `passthru.supplyChainCheck`
+  # (wired into `nix flake check` via flake.nix), and at the top of the
+  # FOD's buildPhase so a compromised dep can't reach `bun install`.
+  # tests/supply-chain-scan proves that it rejects a listed name.
+  supplyChainScan = ./supply-chain-scan.sh;
+
   supplyChainCheck = pkgs.runCommand "gstack-supply-chain-check" { } ''
-    patterns=$(grep -v '^[[:space:]]*\(#\|$\)' ${compromisedList})
-    if matches=$(echo "$patterns" | grep -wFf - ${src}/bun.lock); then
-      echo "" >&2
-      echo "ERROR: bun.lock references known-compromised npm/PyPI packages:" >&2
-      echo "$matches" | sed 's/^/  /' >&2
-      echo "See nix/compromised-packages.txt. Refusing to build." >&2
-      exit 1
-    fi
+    bash ${supplyChainScan} ${compromisedList} ${src}/bun.lock
     touch $out
   '';
 
@@ -110,17 +101,8 @@ let
       # Supply-chain assertion: refuse to call `bun install` if bun.lock
       # references any known-compromised package name. Stops the next
       # Mini Shai-Hulud-class incident from executing during install even
-      # if --ignore-scripts is later loosened. The patterns file is
-      # stripped of comments and blank lines first — an empty pattern
-      # would otherwise match every line in bun.lock.
-      patterns=$(grep -v '^[[:space:]]*\(#\|$\)' ${compromisedList})
-      if matches=$(echo "$patterns" | grep -wFf - bun.lock); then
-        echo "" >&2
-        echo "ERROR: bun.lock references known-compromised packages:" >&2
-        echo "$matches" | sed 's/^/  /' >&2
-        echo "See nix/compromised-packages.txt. Refusing to install." >&2
-        exit 1
-      fi
+      # if --ignore-scripts is later loosened.
+      bash ${supplyChainScan} ${compromisedList} bun.lock
 
       export HOME=$TMPDIR
 
