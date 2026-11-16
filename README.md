@@ -1,13 +1,15 @@
 # nix-gstack
 
-Nix flake providing [gstack](https://github.com/nhooey/gstack) packaging,
+Nix flake providing [gstack](https://github.com/garrytan/gstack) packaging,
 intended to be pulled into an NUR Packages repository.
 
 ## What's here
 
-- `flake.nix` — flake-parts skeleton wiring up
-  [devshell](https://github.com/numtide/devshell) and
-  [treefmt-nix](https://github.com/numtide/treefmt-nix) (nixfmt only)
+- `flake.nix` — flake-parts skeleton importing agent-skill-flake's
+  `devshellSkills` module (which brings
+  [devshell](https://github.com/numtide/devshell) and the skills commands)
+  and [treefmt-nix](https://github.com/numtide/treefmt-nix) (nixfmt only),
+  plus one `agent-skill-garrytan-<name>` package per gstack skill
 - `nix/gstack.nix` — `packages.<sys>.gstack` (also exposed as `default`):
   a hermetic build. A fixed-output `node_modules` derivation runs
   `bun install --frozen-lockfile --ignore-scripts` with network, then
@@ -20,8 +22,8 @@ intended to be pulled into an NUR Packages repository.
 
 The build is hermetic: `bun install` and `bun build --compile` run inside
 Nix, gated by a per-system `nodeModulesHash` table in `nix/gstack.nix`.
-Bumping the upstream rev or `bun.lock` means re-pinning that hash — see
-the header comment in `nix/gstack.nix` for the workflow. A curated
+Bumping the upstream rev or `bun.lock` means re-pinning that hash, which
+`nix-gstack pin` in the dev shell does. A curated
 `nix/compromised-packages.txt` is scanned against `bun.lock` (wired into
 `nix flake check` as `checks.<sys>.supply-chain`) and refuses the build
 on a known-compromised dependency.
@@ -35,6 +37,9 @@ check       # nix flake check
 fmt         # nix fmt (nixfmt)
 fmt-check   # verify formatting without writing
 update-flake
+reap-skills             # remove the skills this dev shell installed
+update-skills-devshell  # bump the skills-devshell/ lock (the skill set)
+nix-gstack pin          # re-pin gstack to upstream HEAD (--help for options)
 ```
 
 ## Consuming from another flake

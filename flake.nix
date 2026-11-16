@@ -59,8 +59,8 @@
         treefmt-nix.flakeModule
       ];
 
-      # nix-gstack keeps its custom motd (the pancake banner); the module's
-      # generated banner is overridden by passing `motd` here.
+      # nix-gstack's own motd (the pancake banner), which replaces the
+      # module's generated banner.
       agent-skill-flake.devshellSkills = {
         name = "nix-gstack";
         motd = ''
@@ -107,6 +107,20 @@
                   inherit (gstack.passthru.gstack) version;
                 }).packages.${system}
           ) { } skillNames;
+
+          # The repository's maintenance tool, from nix/nix-gstack.sh.
+          nix-gstack = pkgs.writeShellApplication {
+            name = "nix-gstack";
+            runtimeInputs = [
+              pkgs.coreutils
+              pkgs.gawk
+              pkgs.git
+              pkgs.gnugrep
+              pkgs.gnused
+              pkgs.nix
+            ];
+            text = builtins.readFile ./nix/nix-gstack.sh;
+          };
         in
         {
           packages = skillPackages // {
@@ -120,13 +134,45 @@
             # Runs on `nix flake check` so supply-chain regressions surface
             # without a full FOD rebuild.
             supply-chain = gstack.passthru.supplyChainCheck;
+
+            # The scan behind `supply-chain` rejects a listed name, and only
+            # whole names: fixture lockfiles in tests/supply-chain-scan.
+            supply-chain-scan = pkgs.runCommand "supply-chain-scan-test" { } ''
+              bash ${./tests/supply-chain-scan/test.sh} \
+                ${./nix/supply-chain-scan.sh} ${./tests/supply-chain-scan/fixtures}
+              touch $out
+            '';
+
+            # nix-gstack's argument parsing and its edits to nix/gstack.nix.
+            nix-gstack = pkgs.runCommand "nix-gstack-test" { } ''
+              bash ${./tests/nix-gstack/test.sh} ${./nix/nix-gstack.sh} ${./nix/gstack.nix}
+              touch $out
+            '';
+
+            # Every packaged skill is rendered to point at the store, not at
+            # ~/.claude/skills/gstack.
+            skills-render = pkgs.runCommand "skills-render-test" { } ''
+              bash ${./tests/skills-render/test.sh} ${skills} ${lib.escapeShellArgs skillNames}
+              touch $out
+            '';
+
+            # `nix flake check` only evaluates packages; this builds them all,
+            # so a failed upstream patch (--replace-fail) or a broken skill
+            # package fails the check.
+            packages = pkgs.linkFarmFromDrvs "nix-gstack-packages" (
+              lib.attrValues skillPackages
+              ++ [
+                gstack
+                nix-gstack
+              ]
+            );
           };
 
           treefmt = {
             projectRootFile = "flake.nix";
-            # Only nixfmt for now. Adding shfmt / prettier / etc. would force
-            # opinions on consumers — opt those in deliberately in follow-up
-            # PRs once excludes are dialled in.
+            # Only nixfmt: shfmt, prettier and the like would force opinions
+            # on consumers, so each needs its excludes worked out before it
+            # is enabled.
             programs.nixfmt.enable = true;
             settings.global.excludes = [
               "**/*.lock"
@@ -154,6 +200,11 @@
                 name = "fmt-check";
                 help = "Verify formatting without writing changes";
                 command = "nix fmt -- --ci";
+              }
+              {
+                category = "maintenance";
+                package = nix-gstack;
+                help = "Re-pin gstack's source and node_modules hashes (nix-gstack pin)";
               }
             ];
           };

@@ -1,0 +1,5 @@
+# Comment lines and blank lines must not become match-all patterns.
+
+   # An indented comment.
+lightning
+@tanstack/history
