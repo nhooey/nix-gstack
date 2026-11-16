@@ -14,8 +14,8 @@
 #     https://www.wiz.io/blog/mini-shai-hulud-strikes-again-tanstack-more-npm-packages-compromised
 #
 # Maintenance: when a new supply-chain incident is disclosed, append the
-# package names here and bump the FOD hash (the scan now treats them as
-# poison, so `nix build` either succeeds clean or fails loudly).
+# package names here and bump the FOD hash. The scan treats every listed
+# name as poison, so `nix build` either succeeds clean or fails loudly.
 
 # ── Mini Shai-Hulud (2026-05-12) ──────────────────────────────────────
 # PyPI (also caught by the same grep against bun.lock — harmless extras)

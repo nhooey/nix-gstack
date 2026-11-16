@@ -162,8 +162,8 @@ let
     ];
 
     # The installed scripts run under bun. fixupPhase's patchShebangs resolves
-    # their `#!/usr/bin/env -S bun …` lines against buildInputs only; with bun
-    # in nativeBuildInputs alone, the interpreter came out empty.
+    # their `#!/usr/bin/env -S bun …` lines against buildInputs only, so bun
+    # has to be here as well as in nativeBuildInputs for them to resolve.
     buildInputs = [ pkgs.bun ];
 
     PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";

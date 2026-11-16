@@ -1,6 +1,6 @@
 # nix-gstack
 
-A Nix flake packaging [gstack](https://github.com/nhooey/gstack): a hermetic build of its binaries in `nix/gstack.nix`, and one `agent-skill-garrytan-<name>` package per gstack skill for agent-skill-flake consumers. The build is pinned by a per-system `nodeModulesHash` table, so far computed only for `aarch64-darwin`.
+A Nix flake packaging [gstack](https://github.com/nhooey/gstack): a hermetic build of its binaries in `nix/gstack.nix`, and one `agent-skill-garrytan-<name>` package per gstack skill for agent-skill-flake consumers. The build is pinned by a per-system `nodeModulesHash` table, computed only for `aarch64-darwin`, the one system the flake builds for.
 
 ## Build and test
 

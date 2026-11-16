@@ -59,8 +59,8 @@
         treefmt-nix.flakeModule
       ];
 
-      # nix-gstack keeps its custom motd (the pancake banner); the module's
-      # generated banner is overridden by passing `motd` here.
+      # nix-gstack's own motd (the pancake banner), which replaces the
+      # module's generated banner.
       agent-skill-flake.devshellSkills = {
         name = "nix-gstack";
         motd = ''
@@ -124,9 +124,9 @@
 
           treefmt = {
             projectRootFile = "flake.nix";
-            # Only nixfmt for now. Adding shfmt / prettier / etc. would force
-            # opinions on consumers — opt those in deliberately in follow-up
-            # PRs once excludes are dialled in.
+            # Only nixfmt: shfmt, prettier and the like would force opinions
+            # on consumers, so each needs its excludes worked out before it
+            # is enabled.
             programs.nixfmt.enable = true;
             settings.global.excludes = [
               "**/*.lock"
