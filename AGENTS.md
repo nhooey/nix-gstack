@@ -6,5 +6,5 @@ A Nix flake packaging [gstack](https://github.com/garrytan/gstack): a hermetic b
 
 - `nix develop`: the dev shell, with the `check`, `fmt`, `fmt-check` and `update-flake` commands, and the project's skills installed into `.agents/skills/` from the `skills-devshell/` sub-flake.
 - `nix build`: builds `gstack`, the default package.
-- `nix flake check`: runs the supply-chain check, which refuses a `bun.lock` naming any package in `nix/compromised-packages.txt`, and fails on any file `nix fmt` would change.
+- `nix flake check`: runs the supply-chain check, which refuses a `bun.lock` naming any package in `nix/compromised-packages.txt`; the tests under `tests/`, one directory per check; a build of every package; and fails on any file `nix fmt` would change.
 - `nix fmt`: formats every Nix file with nixfmt.

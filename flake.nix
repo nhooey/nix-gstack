@@ -128,6 +128,18 @@
                 ${./nix/supply-chain-scan.sh} ${./tests/supply-chain-scan/fixtures}
               touch $out
             '';
+
+            # Every packaged skill is rendered to point at the store, not at
+            # ~/.claude/skills/gstack.
+            skills-render = pkgs.runCommand "skills-render-test" { } ''
+              bash ${./tests/skills-render/test.sh} ${skills} ${lib.escapeShellArgs skillNames}
+              touch $out
+            '';
+
+            # `nix flake check` only evaluates packages; this builds them all,
+            # so a failed upstream patch (--replace-fail) or a broken skill
+            # package fails the check.
+            packages = pkgs.linkFarmFromDrvs "nix-gstack-packages" (lib.attrValues skillPackages ++ [ gstack ]);
           };
 
           treefmt = {
