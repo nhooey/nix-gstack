@@ -1,0 +1,6 @@
+{
+  "lockfileVersion": 1,
+  "packages": {
+    "lightning-alias": ["lightning-alias@npm:lightning@1.0.0", "", {}, "sha512-FFFF"],
+  }
+}

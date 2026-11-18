@@ -136,13 +136,15 @@
             supply-chain = gstack.passthru.supplyChainCheck;
 
             # The scan behind `supply-chain` rejects a listed name, and only
-            # whole names, and fails on inputs it cannot read: fixture
+            # exact package names, and fails on inputs it cannot read: fixture
             # lockfiles in tests/supply-chain-scan.
-            supply-chain-scan = pkgs.runCommand "supply-chain-scan-test" { } ''
-              bash ${./tests/supply-chain-scan/test.sh} \
-                ${./nix/supply-chain-scan.sh} ${./tests/supply-chain-scan/fixtures}
-              touch $out
-            '';
+            supply-chain-scan =
+              pkgs.runCommand "supply-chain-scan-test" { nativeBuildInputs = [ pkgs.bun ]; }
+                ''
+                  bash ${./tests/supply-chain-scan/test.sh} \
+                    ${./nix/supply-chain-scan.sh} ${./tests/supply-chain-scan/fixtures}
+                  touch $out
+                '';
 
             # nix-gstack's argument parsing and its edits to nix/gstack.nix.
             nix-gstack = pkgs.runCommand "nix-gstack-test" { } ''

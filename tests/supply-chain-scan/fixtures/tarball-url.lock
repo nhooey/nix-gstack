@@ -1,0 +1,6 @@
+{
+  "lockfileVersion": 1,
+  "packages": {
+    "@tanstack/history": ["@tanstack/history@https://registry.npmjs.org/@tanstack/history/-/history-1.161.9.tgz", {}],
+  }
+}

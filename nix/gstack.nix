@@ -63,17 +63,20 @@ let
   # reusable version exposed to `nix flake check`.
   compromisedList = ./compromised-packages.txt;
 
-  # Greps a bun.lock against the curated list and fails on any match. One
-  # script, run in two places: as the standalone `passthru.supplyChainCheck`
-  # (wired into `nix flake check` via flake.nix), and at the top of the
-  # FOD's buildPhase so a compromised dep can't reach `bun install`.
-  # tests/supply-chain-scan proves that it rejects a listed name.
+  # Parses a bun.lock and fails when a package's name is on the curated
+  # list. One script, run in two places: as the standalone
+  # `passthru.supplyChainCheck` (wired into `nix flake check` via
+  # flake.nix), and at the top of the FOD's buildPhase so a compromised
+  # dep can't reach `bun install`. tests/supply-chain-scan proves that it
+  # rejects a listed name and allows a sibling of one.
   supplyChainScan = ./supply-chain-scan.sh;
 
-  supplyChainCheck = pkgs.runCommand "gstack-supply-chain-check" { } ''
-    bash ${supplyChainScan} ${compromisedList} ${src}/bun.lock
-    touch $out
-  '';
+  supplyChainCheck =
+    pkgs.runCommand "gstack-supply-chain-check" { nativeBuildInputs = [ pkgs.bun ]; }
+      ''
+        bash ${supplyChainScan} ${compromisedList} ${src}/bun.lock
+        touch $out
+      '';
 
   nodeModules = pkgs.stdenv.mkDerivation {
     pname = "gstack-node-modules";
