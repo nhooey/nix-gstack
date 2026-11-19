@@ -17,11 +17,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1780775109,
-        "narHash": "sha256-IZcERqtjr7+wi+VbcKyCkW6a8V+Kn96EQmsmShZPyTI=",
+        "lastModified": 1795035595,
+        "narHash": "sha256-Y9u0Gcs27mDts5Nwju29B3l3v2bm5NUASgXthF9XQtc=",
         "owner": "nhooey",
         "repo": "agent-skill-flake",
-        "rev": "ad0f758c9473659d249f6994a7b185afda336c47",
+        "rev": "3715545caa18eef623ae070b21a4159f24fb84fc",
         "type": "github"
       },
       "original": {

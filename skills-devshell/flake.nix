@@ -11,23 +11,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Skill sources, the same repos `github:nhooey/skillspkgs` aggregates.
-    # They follow `nixpkgs` but not `agent-skill-flake`, so each keeps its own
-    # compatible builder.
-    coding-agent-skills = {
-      url = "github:nhooey/coding-agent-skills";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    git-skills = {
-      url = "github:nhooey/git-skills";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nix-skills = {
-      url = "github:nhooey/nix-skills";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    shell-skills = {
-      url = "github:nhooey/shell-skills";
+    # skillspkgs' per-family skill combinations. It follows `nixpkgs` but not
+    # `agent-skill-flake`, so its sources keep their own compatible builder.
+    skillspkgs-combinations = {
+      url = "github:nhooey/skillspkgs?dir=sources/combinations";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -43,27 +30,9 @@
       systems = import inputs.systems;
       name = "nix-gstack-skills";
       sources = [
-        # Commits, branches and pull requests.
-        { source = inputs.git-skills; }
-        # Writing this flake and its gstack package.
-        {
-          source = inputs.nix-skills;
-          skills = [
-            "nix-flakes"
-          ];
-        }
-        # Safe shell commands: named deletes, PIDs, no machine-wide changes.
-        { source = inputs.shell-skills; }
-        # Running a prompt as a headless session in other checkouts, keeping
-        # the scratchpad tidy, and the cross-repository plan's graph.
-        {
-          source = inputs.coding-agent-skills;
-          skills = [
-            "coding-agent-headless-in-checkout"
-            "coding-agent-plans-as-graph"
-            "coding-agent-scratchpad-scripts"
-          ];
-        }
+        # nix-gstack is in the skill-packaging family; its combination is the
+        # whole skill set, with no additions.
+        { source = inputs.skillspkgs-combinations.combinations.skill-packaging; }
       ];
     };
 }

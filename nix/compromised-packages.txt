@@ -2,7 +2,7 @@
 #
 # Lines starting with `#` and blank lines are ignored. One package name per
 # line, no version. Used by the FOD pre-install scan and a flake check —
-# both `grep -wFf` this file against bun.lock and fail on any match.
+# both fail when a package bun.lock resolves has exactly a listed name.
 #
 # When adding entries, prefer the bare package name (no version). Wildcard
 # patterns are NOT supported — list each compromised package name explicitly
@@ -18,7 +18,7 @@
 # name as poison, so `nix build` either succeeds clean or fails loudly.
 
 # ── Mini Shai-Hulud (2026-05-12) ──────────────────────────────────────
-# PyPI (also caught by the same grep against bun.lock — harmless extras)
+# PyPI (scanned against bun.lock too — harmless extras)
 guardrails-ai
 mistralai
 

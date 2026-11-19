@@ -1,0 +1,6 @@
+{
+  "lockfileVersion": 1,
+  "packages": {
+    "lightning": ["lightning@git+ssh://git@github.com/example/lightning.git#0123abc", {}, "0123abc"],
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "lockfileVersion": 1,
+  "packages": {
+    "x": ["garbage"],
+  }
+}
